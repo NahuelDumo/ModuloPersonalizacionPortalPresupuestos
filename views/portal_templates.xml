@@ -33,9 +33,38 @@
         </xpath>
     </template>
 
+    <!-- Ocultar contenido original cuando hay PDF adjunto -->
+    <template id="portal_sale_order_hide_original_content" name="Hide Original Content When PDF" inherit_id="sale.sale_order_portal_content" priority="21">
+        <!-- Ocultar la sección de informaciones cuando hay PDF -->
+        <xpath expr="//div[@id='informations']" position="attributes">
+            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+        
+        <!-- Ocultar la sección de detalles/productos cuando hay PDF -->
+        <xpath expr="//section[@id='details']" position="attributes">
+            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+        
+        <!-- Ocultar la sección de firma cuando hay PDF -->
+        <xpath expr="//section[@t-if='sale_order.signature']" position="attributes">
+            <attribute name="t-if">sale_order.signature and not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+        
+        <!-- Ocultar términos y condiciones cuando hay PDF -->
+        <xpath expr="//section[@t-if='not is_html_empty(sale_order.note)']" position="attributes">
+            <attribute name="t-if">not is_html_empty(sale_order.note) and not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+        
+        <!-- Ocultar términos de pago cuando hay PDF -->
+        <xpath expr="//section[@t-if='sale_order.payment_term_id']" position="attributes">
+            <attribute name="t-if">sale_order.payment_term_id and not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+    </template>
+
     <!-- Agregar vista previa del PDF después del contenido de la cotización -->
-    <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="21">
-        <xpath expr="//section[@t-if='sale_order.payment_term_id']" position="after">
+    <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
+        <!-- Usar el div principal como punto de anclaje para el PDF preview -->
+        <xpath expr="//div[contains(@class,'card-body') or not(@class)]" position="inside">
             <t t-if="sale_order.portal_has_pdf_attachment">
                 <section class="mt-5">
                     <div class="card">
@@ -81,7 +110,7 @@
     </template>
 
     <!-- CSS personalizado incluido inline para evitar dependencias -->
-    <template id="portal_sale_order_pdf_styles" name="Portal Sale Order PDF Styles" inherit_id="sale.sale_order_portal_content" priority="22">
+    <template id="portal_sale_order_pdf_styles" name="Portal Sale Order PDF Styles" inherit_id="sale.sale_order_portal_content" priority="23">
         <xpath expr="//div[@id='introduction']" position="before">
             <style>
                 .portal-pdf-info {
