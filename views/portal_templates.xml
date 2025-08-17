@@ -2,13 +2,13 @@
 <odoo>
     <!-- Odoo 16: Extend the Sale portal order page to show the last attached PDF in the main content area. -->
     <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_template" name="Portal Order - PDF Preview" primary="True">
-        <!-- Target the main content area -->
-        <xpath expr="//div[contains(@class, 'o_portal_sale_content') or contains(@class, 'o_portal_order_content') or contains(@class, 'o_portal_my_doc') or @id='wrap']" position="attributes">
+        <!-- Target the main content area by id present in base template -->
+        <xpath expr="//div[@id='quote_content']" position="attributes">
             <attribute name="t-if">not has_quote_pdf</attribute>
         </xpath>
 
         <!-- Insert PDF viewer after the main content area -->
-        <xpath expr="//div[contains(@class, 'o_portal_sale_content') or contains(@class, 'o_portal_order_content') or contains(@class, 'o_portal_my_doc') or @id='wrap']" position="after">
+        <xpath expr="//div[@id='quote_content']" position="after">
             <div t-if="has_quote_pdf" class="o_portal_sale_pdf_viewer my-3">
                 <div class="alert alert-info">
                     <i class="fa fa-info-circle me-2"></i>
