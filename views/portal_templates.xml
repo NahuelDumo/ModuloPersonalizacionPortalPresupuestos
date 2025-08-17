@@ -155,7 +155,6 @@
                                             <td class="text-end">
                                                 <strong t-field="sale_order.amount_total" 
                                                         t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
-                                            </strong>
                                             </td>
                                         </tr>
                                     </table>
