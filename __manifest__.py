@@ -13,7 +13,7 @@
     ],
     'assets': {
         'web.assets_frontend': [
-            'sale_portal_quote_pdf_preview/static/src/js/quote_print.js',
+            'ModuloPersonalizacionPortalPresupuestos/static/src/js/quote_print.js',
         ],
     },
     'installable': True,
