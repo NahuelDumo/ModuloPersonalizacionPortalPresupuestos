@@ -1,66 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Template que SOLO modifica la vista del portal del cliente -->
+    <!-- Template que SOLO agrega funcionalidad sin modificar botones existentes -->
     
-    <!-- Reemplazar los botones Descargar e Imprimir en el portal -->
-    <template id="portal_sale_order_pdf_buttons" name="Portal Sale Order PDF Buttons" inherit_id="sale.sale_order_portal_content" priority="20">
-        
-        <!-- Reemplazar el botón de Descargar -->
-        <xpath expr="//a[contains(@class,'o_download_btn') and contains(@href,'/my/orders/')]" position="replace">
+    <!-- Agregar información del PDF adjunto en el portal (antes del contenido) -->
+    <template id="portal_sale_order_pdf_info" name="Portal Sale Order PDF Info" inherit_id="sale.sale_order_portal_content" priority="20">
+        <xpath expr="//div[@id='introduction']" position="before">
             <t t-if="sale_order.portal_has_pdf_attachment">
-                <a t-att-href="sale_order.portal_pdf_download_url" 
-                   class="btn btn-secondary o_download_btn" 
-                   title="Descargar"
-                   target="_self">
-                    <i class="fa fa-download"></i> Descargar
-                </a>
-            </t>
-            <t t-else="">
-                <!-- Fallback al PDF original si no hay adjunto -->
-                <a t-attf-href="/my/orders/#{sale_order.id}?#{keep_query()}&amp;report_type=pdf&amp;download=true" 
-                   class="btn btn-secondary o_download_btn"
-                   title="Descargar"
-                   target="_self">
-                    <i class="fa fa-download"></i> Descargar
-                </a>
-            </t>
-        </xpath>
-
-        <!-- Reemplazar el botón de Imprimir -->
-        <xpath expr="//a[contains(@class,'o_print_btn') and contains(@href,'/my/orders/')]" position="replace">
-            <t t-if="sale_order.portal_has_pdf_attachment">
-                <a t-att-href="sale_order.portal_pdf_attachment_url" 
-                   class="btn btn-secondary o_print_btn o_portal_invoice_print"
-                   title="Imprimir"
-                   target="_blank">
-                    <i class="fa fa-print"></i> Imprimir
-                </a>
-            </t>
-            <t t-else="">
-                <!-- Fallback al PDF original si no hay adjunto -->
-                <a t-attf-href="/my/orders/#{sale_order.id}?#{keep_query()}&amp;report_type=pdf" 
-                   class="btn btn-secondary o_print_btn o_portal_invoice_print"
-                   title="Imprimir"
-                   target="_blank">
-                    <i class="fa fa-print"></i> Imprimir
-                </a>
-            </t>
-        </xpath>
-    </template>
-
-    <!-- Agregar información del PDF adjunto en el portal -->
-    <template id="portal_sale_order_pdf_info" name="Portal Sale Order PDF Info" inherit_id="sale.sale_order_portal_content" priority="21">
-        <xpath expr="//div[@id='quote_content']" position="before">
-            <t t-if="sale_order.portal_has_pdf_attachment">
-                <div class="alert alert-info portal-pdf-info">
+                <div class="alert alert-info portal-pdf-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-file-pdf-o fa-2x text-danger me-3"></i>
                         <div class="flex-grow-1">
-                            <h6 class="mb-1">📄 Documento PDF Disponible</h6>
+                            <h6 class="mb-1">Documento PDF Disponible</h6>
                             <small>
                                 <strong t-esc="sale_order.portal_pdf_attachment_name"/>
                                 - Este documento reemplaza la cotización estándar
                             </small>
+                        </div>
+                        <div class="ms-3">
+                            <a t-att-href="sale_order.portal_pdf_attachment_url" 
+                               class="btn btn-sm btn-outline-primary me-2" 
+                               target="_blank">
+                                <i class="fa fa-external-link"></i> Ver PDF
+                            </a>
+                            <a t-att-href="sale_order.portal_pdf_download_url" 
+                               class="btn btn-sm btn-outline-success">
+                                <i class="fa fa-download"></i> Descargar
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -68,129 +33,78 @@
         </xpath>
     </template>
 
-    <!-- Reemplazar la vista previa del PDF -->
-    <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
-        
-        <!-- Reemplazar el contenido principal de la cotización -->
-        <xpath expr="//div[@id='portal_sale_content']//div[@class='card-body']" position="replace">
-            <div class="card-body">
-                <t t-if="sale_order.portal_has_pdf_attachment">
-                    <!-- Vista previa del PDF adjunto -->
-                    <div class="portal-pdf-preview">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title">
-                                <i class="fa fa-file-pdf-o text-danger"></i>
-                                Vista Previa del Documento
-                            </h5>
-                            <div class="btn-group">
-                                <a t-att-href="sale_order.portal_pdf_attachment_url" 
-                                   class="btn btn-sm btn-outline-primary" 
-                                   target="_blank">
-                                    <i class="fa fa-external-link"></i> Abrir en nueva ventana
-                                </a>
-                                <a t-att-href="sale_order.portal_pdf_download_url" 
-                                   class="btn btn-sm btn-outline-success">
-                                    <i class="fa fa-download"></i> Descargar
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <!-- Iframe para mostrar el PDF -->
-                        <div class="pdf-container">
-                            <iframe t-att-src="sale_order.portal_pdf_attachment_url"
-                                    class="portal-pdf-iframe w-100"
-                                    style="height: 600px;"
-                                    frameborder="0">
-                                <p>Tu navegador no soporta la vista previa de PDF. 
-                                   <a t-att-href="sale_order.portal_pdf_download_url">Haz clic aquí para descargar</a>
-                                </p>
-                            </iframe>
-                        </div>
-                    </div>
-                </t>
-                <t t-else="">
-                    <!-- Fallback: mostrar la cotización normal si no hay PDF adjunto -->
-                    <div class="alert alert-warning">
-                        <i class="fa fa-exclamation-triangle"></i>
-                        No hay documentos PDF adjuntos. Mostrando cotización estándar:
-                    </div>
-                    
-                    <!-- Información básica -->
-                    <div id="informations">
-                        <div class="row" id="so_date">
-                            <div class="mb-3 col-6">
-                                 <strong>Fecha de presupuesto:</strong>
-                              <span t-field="sale_order.date_order" t-options='{"format": "dd/MM/yyyy"}'/>
-                            </div>
-                            <div class="mb-3 col-6">
-                                <strong>Fecha de caducidad:</strong> 
-                                <span t-field="sale_order.validity_date" t-options='{"format": "dd/MM/yyyy"}'/>
-                            </div>
-                        </div>
-                        <div class="row" id="invoicing_shipping_address">
-                            <div class="col-lg-6">
-                                <strong class="d-block mb-1">Dirección de facturación y envío:</strong>
-                                <address t-field="sale_order.partner_invoice_id"
-                                        t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tabla de productos -->
-                    <section id="details" style="page-break-inside: auto;" class="mt32">
-                        <h3>Precio</h3>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th class="text-end">Cantidad</th>
-                                        <th class="text-end">Precio Unitario</th>
-                                        <th class="text-end">Impuestos</th>
-                                        <th class="text-end">Importe</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="sale_order.order_line" t-as="line">
-                                        <tr>
-                                            <td><span t-field="line.name"/></td>
-                                            <td class="text-end">
-                                                <span t-field="line.product_uom_qty"/>
-                                                <span t-field="line.product_uom"/>
-                                            </td>
-                                            <td class="text-end">
-                                                <span t-field="line.price_unit" 
-                                                      t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
-                                            </td>
-                                            <td class="text-end">
-                                                <span t-esc="', '.join(map(lambda x: x.name, line.tax_id))"/>
-                                            </td>
-                                            <td class="text-end">
-                                                <span t-field="line.price_subtotal" 
-                                                      t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                            
-                            <div class="row">
-                                <div class="col-6 offset-6">
-                                    <table class="table table-sm">
-                                        <tr>
-                                            <td><strong>Total:</strong></td>
-                                            <td class="text-end">
-                                                <strong t-field="sale_order.amount_total" 
-                                                        t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
-                                            </td>
-                                        </tr>
-                                    </table>
+    <!-- Agregar vista previa del PDF después del contenido de la cotización -->
+    <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="21">
+        <xpath expr="//section[@t-if='sale_order.payment_term_id']" position="after">
+            <t t-if="sale_order.portal_has_pdf_attachment">
+                <section class="mt-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="fa fa-file-pdf-o text-danger"></i>
+                                    Vista Previa del Documento PDF
+                                </h5>
+                                <div class="btn-group">
+                                    <a t-att-href="sale_order.portal_pdf_attachment_url" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       target="_blank">
+                                        <i class="fa fa-external-link"></i> Abrir
+                                    </a>
+                                    <a t-att-href="sale_order.portal_pdf_download_url" 
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="fa fa-download"></i> Descargar
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </section>
-                </t>
-            </div>
+                        <div class="card-body p-0">
+                            <div class="pdf-container">
+                                <iframe t-att-src="sale_order.portal_pdf_attachment_url"
+                                        class="portal-pdf-iframe w-100"
+                                        style="height: 800px; border: none;"
+                                        frameborder="0">
+                                    <div class="p-4 text-center">
+                                        <p class="mb-3">Tu navegador no soporta la vista previa de PDF.</p>
+                                        <a t-att-href="sale_order.portal_pdf_download_url" 
+                                           class="btn btn-primary">
+                                            <i class="fa fa-download"></i> Descargar PDF
+                                        </a>
+                                    </div>
+                                </iframe>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- CSS personalizado incluido inline para evitar dependencias -->
+    <template id="portal_sale_order_pdf_styles" name="Portal Sale Order PDF Styles" inherit_id="sale.sale_order_portal_content" priority="22">
+        <xpath expr="//div[@id='introduction']" position="before">
+            <style>
+                .portal-pdf-info {
+                    border-left: 4px solid #dc3545;
+                    background-color: #f8f9fa;
+                    border-radius: 0.375rem;
+                }
+                
+                .portal-pdf-iframe {
+                    min-height: 600px;
+                }
+                
+                @media (max-width: 768px) {
+                    .portal-pdf-iframe {
+                        height: 500px !important;
+                    }
+                }
+                
+                .pdf-container {
+                    position: relative;
+                    overflow: hidden;
+                }
+            </style>
         </xpath>
     </template>
 
