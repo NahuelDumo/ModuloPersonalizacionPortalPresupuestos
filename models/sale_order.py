@@ -44,7 +44,7 @@ class SaleOrder(models.Model):
         help="Nombre del archivo PDF adjunto"
     )
     
-    @api.depends('message_attachment_ids')  # Se recomputa cuando cambien los adjuntos
+    @api.depends()  # Campo computado sin dependencias automáticas
     def _compute_portal_last_pdf_attachment(self):
         """
         Computa el último adjunto PDF para mostrar en el portal
@@ -89,8 +89,9 @@ class SaleOrder(models.Model):
         Retorna información del PDF para el portal
         """
         try:
-            # Asegurar que los campos están computados
+            # Forzar recálculo de los campos
             self._compute_portal_last_pdf_attachment()
+            self.invalidate_cache()
             
             info = {
                 'has_pdf': self.portal_has_pdf_attachment,

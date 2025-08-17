@@ -1,106 +1,193 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api
+from odoo import http
+from odoo.http import request
+from odoo.addons.sale.controllers.portal import CustomerPortal
+from odoo.exceptions import AccessError, MissingError
 import logging
+import base64
 
 _logger = logging.getLogger(__name__)
 
-class SaleOrder(models.Model):
-    _inherit = 'sale.order'
+class PortalSaleOrder(CustomerPortal):
     
-    def _compute_portal_last_pdf_attachment(self):
+    @http.route(['/my/orders/<int:order_id>'], type='http', auth="public", website=True)
+    def portal_order_page(self, order_id, report_type=None, access_token=None, message=False, download=False, **kw):
         """
-        Computa el último adjunto PDF para mostrar en el portal
-        """
-        for order in self:
-            try:
-                # Buscar adjuntos PDF relacionados con esta orden
-                domain = [
-                    ('res_model', '=', 'sale.order'),
-                    ('res_id', '=', order.id),
-                    ('mimetype', '=', 'application/pdf'),
-                    ('name', 'ilike', '%.pdf')
-                ]
-                
-                attachments = self.env['ir.attachment'].search(domain, order='create_date desc', limit=1)
-                
-                if attachments:
-                    attachment = attachments[0]
-                    order.portal_last_pdf_attachment = attachment
-                    order.portal_has_pdf_attachment = True
-                    # Usar URLs personalizadas para el portal que manejan permisos correctamente
-                    order.portal_pdf_attachment_url = f'/my/orders/{order.id}/view_pdf'
-                    order.portal_pdf_download_url = f'/my/orders/{order.id}/download_pdf'
-                else:
-                    order.portal_last_pdf_attachment = False
-                    order.portal_has_pdf_attachment = False
-                    order.portal_pdf_attachment_url = False
-                    order.portal_pdf_download_url = False
-                    
-            except Exception as e:
-                _logger.error(f"Error computing PDF attachment for order {order.name}: {e}")
-                order.portal_last_pdf_attachment = False
-                order.portal_has_pdf_attachment = False
-                order.portal_pdf_attachment_url = False
-                order.portal_pdf_download_url = False
-
-    def _get_portal_pdf_info(self):
-        """
-        Retorna información del PDF para el portal
+        Override del método portal_order_page para inyectar información del PDF adjunto
         """
         try:
-            self._compute_portal_last_pdf_attachment()
+            order_sudo = self._document_check_access('sale.order', order_id, access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+
+        # Computar información del PDF adjunto para el portal (forzar cálculo)
+        order_sudo._compute_portal_last_pdf_attachment()
+        # Invalidar cache para asegurar cálculo fresco
+        order_sudo.invalidate_cache()
+        
+        # Si se solicita descarga y hay PDF adjunto, usar nuestra ruta personalizada
+        if download and order_sudo.portal_has_pdf_attachment:
+            download_url = f'/my/orders/{order_id}/download_pdf'
+            if access_token:
+                download_url += f'?access_token={access_token}'
+            return request.redirect(download_url)
+        
+        # Llamar al método padre
+        response = super(PortalSaleOrder, self).portal_order_page(
+            order_id, report_type, access_token, message, download, **kw
+        )
+        
+        # Inyectar información adicional del PDF en el contexto
+        if hasattr(response, 'qcontext'):
+            pdf_info = order_sudo._get_portal_pdf_info()
+            # IMPORTANTE: Cambiar las URLs para que usen nuestras rutas personalizadas
+            if pdf_info.get('has_pdf'):
+                pdf_info['pdf_url'] = f'/my/orders/{order_id}/view_pdf'
+                pdf_info['download_url'] = f'/my/orders/{order_id}/download_pdf'
+                if access_token:
+                    pdf_info['pdf_url'] += f'?access_token={access_token}'
+                    pdf_info['download_url'] += f'?access_token={access_token}'
             
-            info = {
-                'has_pdf': self.portal_has_pdf_attachment,
-                'pdf_url': self.portal_pdf_attachment_url or '',
-                'download_url': self.portal_pdf_download_url or '',
-                'filename': '',
-                'filesize': 0,
-                'create_date': ''
-            }
+            response.qcontext.update({
+                'portal_pdf_info': pdf_info,
+                'has_portal_pdf': pdf_info.get('has_pdf', False),
+            })
+        
+        return response
+    
+    @http.route(['/my/orders/<int:order_id>/pdf'], type='http', auth="public", website=True)
+    def portal_order_pdf(self, order_id, access_token=None, **kw):
+        """
+        Override para redirigir a nuestra ruta personalizada
+        """
+        try:
+            order_sudo = self._document_check_access('sale.order', order_id, access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        
+        # Si hay PDF adjunto, usar nuestra ruta personalizada
+        if order_sudo.portal_has_pdf_attachment:
+            view_url = f'/my/orders/{order_id}/view_pdf'
+            if access_token:
+                view_url += f'?access_token={access_token}'
+            return request.redirect(view_url)
+        
+        # Si no hay PDF adjunto, usar el comportamiento original
+        return super(PortalSaleOrder, self).portal_order_pdf(order_id, access_token, **kw)
+    
+    @http.route(['/my/orders/<int:order_id>/view_pdf'], type='http', auth="public", website=True)
+    def portal_view_pdf(self, order_id, access_token=None, **kw):
+        """
+        Ruta personalizada para ver el PDF en el portal con permisos correctos
+        """
+        try:
+            order_sudo = self._document_check_access('sale.order', order_id, access_token)
+        except (AccessError, MissingError):
+            return request.not_found()
+        
+        # Verificar que hay PDF adjunto (forzar cálculo)
+        order_sudo._compute_portal_last_pdf_attachment()
+        order_sudo.invalidate_cache()
+        if not order_sudo.portal_has_pdf_attachment:
+            return request.not_found()
+        
+        attachment = order_sudo.portal_last_pdf_attachment
+        
+        try:
+            # Verificar que el adjunto pertenece a esta orden (seguridad extra)
+            if attachment.res_model != 'sale.order' or attachment.res_id != order_sudo.id:
+                return request.not_found()
             
-            if self.portal_last_pdf_attachment:
-                attachment = self.portal_last_pdf_attachment
-                info.update({
-                    'filename': attachment.name or 'document.pdf',
-                    'filesize': attachment.file_size or 0,
-                    'create_date': attachment.create_date.strftime('%Y-%m-%d %H:%M:%S') if attachment.create_date else ''
-                })
-            
-            return info
-            
+            # Obtener el contenido del archivo
+            if attachment.datas:
+                pdf_content = base64.b64decode(attachment.datas)
+                
+                # Preparar la respuesta HTTP
+                pdfhttpheaders = [
+                    ('Content-Type', 'application/pdf'),
+                    ('Content-Length', len(pdf_content)),
+                    ('Content-Disposition', f'inline; filename="{attachment.name}"'),
+                    ('Cache-Control', 'no-cache, no-store, must-revalidate'),
+                    ('Pragma', 'no-cache'),
+                    ('Expires', '0'),
+                ]
+                
+                return request.make_response(pdf_content, headers=pdfhttpheaders)
+            else:
+                _logger.error(f"PDF attachment {attachment.id} has no data")
+                return request.not_found()
+                
         except Exception as e:
-            _logger.error(f"Error getting PDF info for order {self.name}: {e}")
-            return {
-                'has_pdf': False,
-                'pdf_url': '',
-                'download_url': '',
-                'filename': '',
-                'filesize': 0,
-                'create_date': '',
-                'error': str(e)
-            }
-
-    def get_portal_access_token(self):
+            _logger.error(f"Error serving PDF for order {order_id}: {e}")
+            return request.not_found()
+    
+    @http.route(['/my/orders/<int:order_id>/download_pdf'], type='http', auth="public", website=True)
+    def portal_download_pdf(self, order_id, access_token=None, **kw):
         """
-        Método auxiliar para obtener el token de acceso del portal
+        Ruta personalizada para descargar el PDF en el portal con permisos correctos
         """
-        return getattr(self, 'access_token', None) or self.access_token
-
-    def _get_portal_pdf_urls_with_token(self):
-        """
-        Obtiene las URLs del PDF incluyendo el token de acceso si es necesario
-        """
-        base_view_url = f'/my/orders/{self.id}/view_pdf'
-        base_download_url = f'/my/orders/{self.id}/download_pdf'
+        try:
+            order_sudo = self._document_check_access('sale.order', order_id, access_token)
+        except (AccessError, MissingError):
+            return request.not_found()
         
-        # Si estamos en contexto de portal y hay token, añadirlo
-        access_token = self.get_portal_access_token()
-        if access_token:
-            view_url = f'{base_view_url}?access_token={access_token}'
-            download_url = f'{base_download_url}?access_token={access_token}'
-        else:
-            view_url = base_view_url
-            download_url = base_download_url
+        # Verificar que hay PDF adjunto (forzar cálculo)
+        order_sudo._compute_portal_last_pdf_attachment()
+        order_sudo.invalidate_cache()
+        if not order_sudo.portal_has_pdf_attachment:
+            return request.not_found()
         
-        return view_url, download_url
+        attachment = order_sudo.portal_last_pdf_attachment
+        
+        try:
+            # Verificar que el adjunto pertenece a esta orden (seguridad extra)
+            if attachment.res_model != 'sale.order' or attachment.res_id != order_sudo.id:
+                return request.not_found()
+            
+            # Obtener el contenido del archivo
+            if attachment.datas:
+                pdf_content = base64.b64decode(attachment.datas)
+                
+                # Preparar la respuesta HTTP para descarga
+                filename = attachment.name or f'presupuesto_{order_sudo.name}.pdf'
+                pdfhttpheaders = [
+                    ('Content-Type', 'application/pdf'),
+                    ('Content-Length', len(pdf_content)),
+                    ('Content-Disposition', f'attachment; filename="{filename}"'),
+                    ('Cache-Control', 'no-cache, no-store, must-revalidate'),
+                    ('Pragma', 'no-cache'),
+                    ('Expires', '0'),
+                ]
+                
+                return request.make_response(pdf_content, headers=pdfhttpheaders)
+            else:
+                _logger.error(f"PDF attachment {attachment.id} has no data")
+                return request.not_found()
+                
+        except Exception as e:
+            _logger.error(f"Error downloading PDF for order {order_id}: {e}")
+            return request.not_found()
+    
+    @http.route(['/portal/order/<int:order_id>/pdf_info'], type='json', auth="public")
+    def get_portal_pdf_info(self, order_id, access_token=None, **kw):
+        """
+        Endpoint JSON para obtener información del PDF adjunto desde el portal
+        """
+        try:
+            order_sudo = self._document_check_access('sale.order', order_id, access_token)
+            pdf_info = order_sudo._get_portal_pdf_info()
+            
+            # Actualizar URLs para usar nuestras rutas personalizadas
+            if pdf_info.get('has_pdf'):
+                pdf_info['pdf_url'] = f'/my/orders/{order_id}/view_pdf'
+                pdf_info['download_url'] = f'/my/orders/{order_id}/download_pdf'
+                if access_token:
+                    pdf_info['pdf_url'] += f'?access_token={access_token}'
+                    pdf_info['download_url'] += f'?access_token={access_token}'
+            
+            return pdf_info
+        except (AccessError, MissingError):
+            return {'error': 'Acceso denegado'}
+        except Exception as e:
+            _logger.error(f"Error getting PDF info: {e}")
+            return {'error': str(e)}
