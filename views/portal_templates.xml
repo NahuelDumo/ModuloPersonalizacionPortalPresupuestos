@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <!-- Odoo 16: Extend the Sale portal order page to show the last attached PDF in the main content area. -->
-    <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_template" name="Portal Order - PDF Preview">
+    <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_content" name="Portal Order - PDF Preview">
         <!-- Hide original content when we have a PDF -->
         <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' o_portal_sale_content ')]" position="attributes">
             <attribute name="t-if">not has_quote_pdf</attribute>
