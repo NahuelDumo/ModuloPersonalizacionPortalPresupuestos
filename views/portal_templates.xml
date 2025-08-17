@@ -3,12 +3,12 @@
     <!-- Odoo 16: Extend the Sale portal order page to show the last attached PDF in the main content area. -->
     <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_content" name="Portal Order - PDF Preview">
         <!-- Hide original content when we have a PDF -->
-        <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' o_portal_sale_content ')]" position="attributes">
+        <xpath expr="//div[hasclass('o_portal_sale_content')]" position="attributes">
             <attribute name="t-if">not has_quote_pdf</attribute>
         </xpath>
 
         <!-- Insert PDF viewer after the original container -->
-        <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' o_portal_sale_content ')]" position="after">
+        <xpath expr="//div[hasclass('o_portal_sale_content')]" position="after">
             <div t-if="has_quote_pdf" class="o_portal_sale_pdf_viewer my-3">
                 <div class="d-flex justify-content-end gap-2 mb-2">
                     <a class="btn btn-secondary" t-att-href="quote_pdf_download_url">
