@@ -1,39 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <!-- Odoo 16: Extend the Sale portal order page to show the last attached PDF in the main content area. -->
-    <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_template" name="Portal Order - PDF Preview" primary="True">
-        <!-- Insert PDF viewer after the main content area (we compute variables inline) -->
-        <xpath expr="//div[@id='quote_content']" position="after">
-            <!-- Compute flags and URLs inline to avoid relying on controller override -->
+    <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_content" name="Portal Order - PDF Preview (Replace Content)" primary="True">
+        <!-- Replace the entire content body with our PDF viewer -->
+        <xpath expr="." position="replace">
+            <!-- Compute flags and URLs inline -->
             <t t-set="has_quote_pdf" t-value="request.env['ir.attachment'].sudo().search_count([('res_model','=', 'sale.order'), ('res_id','=', sale_order.id), '|', ('mimetype','ilike','pdf'), ('name','ilike','%.pdf')]) &gt; 0"/>
             <t t-set="token_qs" t-value="sale_order.access_token and ('?access_token=' + sale_order.access_token) or ''"/>
             <t t-set="quote_pdf_inline_url" t-value="'/my/orders/%s/quote/last-pdf%s' % (sale_order.id, token_qs)"/>
             <t t-set="quote_pdf_download_url" t-value="'/my/orders/%s/quote/last-pdf/download%s' % (sale_order.id, token_qs)"/>
-            <div t-if="has_quote_pdf" class="o_portal_sale_pdf_viewer my-3">
-                <div class="alert alert-info">
-                    <i class="fa fa-info-circle me-2"></i>
-                    <strong>Vista previa del presupuesto</strong>
-                </div>
-                <div class="d-flex justify-content-end gap-2 mb-2">
-                    <a class="btn btn-secondary" t-att-href="quote_pdf_download_url">
-                        <i class="fa fa-download me-1"/> Descargar
-                    </a>
-                    <button type="button" class="btn btn-secondary" t-att-data-url="quote_pdf_inline_url" onclick="salePortalQuoteOpenAndPrint(this.getAttribute('data-url'))">
-                        <i class="fa fa-print me-1"/> Imprimir
-                    </button>
-                </div>
-                <div class="mt-3" style="min-height: 600px; width: 100%;">
-                    <div class="h-100 w-100" style="border: 1px solid #dee2e6; border-radius: 0.25rem; overflow: hidden;">
-                        <iframe 
-                            t-att-src="quote_pdf_inline_url"
-                            width="100%" 
-                            height="100%"
-                            style="min-height: 600px; border: none;"
-                            frameborder="0">
-                            <p>Tu navegador no puede mostrar el PDF. <a t-att-href="quote_pdf_inline_url" target="_blank">Abrir PDF en nueva pestaña</a>.</p>
-                        </iframe>
+            <div class="o_portal_sale_content_replaced">
+                <t t-if="has_quote_pdf">
+                    <div class="o_portal_sale_pdf_viewer my-3">
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle me-2"></i>
+                            <strong>Vista previa del presupuesto</strong>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mb-2">
+                            <a class="btn btn-secondary" t-att-href="quote_pdf_download_url">
+                                <i class="fa fa-download me-1"/> Descargar
+                            </a>
+                            <button type="button" class="btn btn-secondary" t-att-data-url="quote_pdf_inline_url" onclick="salePortalQuoteOpenAndPrint(this.getAttribute('data-url'))">
+                                <i class="fa fa-print me-1"/> Imprimir
+                            </button>
+                        </div>
+                        <div class="mt-3" style="min-height: 600px; width: 100%;">
+                            <div class="h-100 w-100" style="border: 1px solid #dee2e6; border-radius: 0.25rem; overflow: hidden;">
+                                <iframe 
+                                    t-att-src="quote_pdf_inline_url"
+                                    width="100%" 
+                                    height="100%"
+                                    style="min-height: 600px; border: none;"
+                                    frameborder="0">
+                                    <p>Tu navegador no puede mostrar el PDF. <a t-att-href="quote_pdf_inline_url" target="_blank">Abrir PDF en nueva pestaña</a>.</p>
+                                </iframe>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-warning my-3">
+                        No hay ningún PDF adjunto al presupuesto.
+                    </div>
+                </t>
             </div>
         </xpath>
     </template>
