@@ -6,18 +6,20 @@
     <template id="portal_sale_order_pdf_buttons" name="Portal Sale Order PDF Buttons" inherit_id="sale.sale_order_portal_content" priority="20">
         
         <!-- Reemplazar el botón de Descargar -->
-        <xpath expr="//a[contains(@class,'btn-secondary') and contains(@href,'/my/orders/') and contains(@href,'/pdf')]" position="replace">
+        <xpath expr="//a[contains(@class,'o_download_btn') and contains(@href,'/my/orders/')]" position="replace">
             <t t-if="sale_order.portal_has_pdf_attachment">
                 <a t-att-href="sale_order.portal_pdf_download_url" 
-                   class="btn btn-secondary" 
+                   class="btn btn-secondary o_download_btn" 
+                   title="Descargar"
                    target="_self">
                     <i class="fa fa-download"></i> Descargar
                 </a>
             </t>
             <t t-else="">
                 <!-- Fallback al PDF original si no hay adjunto -->
-                <a t-attf-href="/my/orders/#{sale_order.id}/pdf?#{keep_query()}" 
-                   class="btn btn-secondary" 
+                <a t-attf-href="/my/orders/#{sale_order.id}?#{keep_query()}&amp;report_type=pdf&amp;download=true" 
+                   class="btn btn-secondary o_download_btn"
+                   title="Descargar"
                    target="_self">
                     <i class="fa fa-download"></i> Descargar
                 </a>
@@ -25,18 +27,20 @@
         </xpath>
 
         <!-- Reemplazar el botón de Imprimir -->
-        <xpath expr="//a[contains(@class,'btn-secondary') and @target='_blank' and contains(@href,'/my/orders/') and contains(@href,'/pdf')]" position="replace">
+        <xpath expr="//a[contains(@class,'o_print_btn') and contains(@href,'/my/orders/')]" position="replace">
             <t t-if="sale_order.portal_has_pdf_attachment">
                 <a t-att-href="sale_order.portal_pdf_attachment_url" 
-                   class="btn btn-secondary" 
+                   class="btn btn-secondary o_print_btn o_portal_invoice_print"
+                   title="Imprimir"
                    target="_blank">
                     <i class="fa fa-print"></i> Imprimir
                 </a>
             </t>
             <t t-else="">
                 <!-- Fallback al PDF original si no hay adjunto -->
-                <a t-attf-href="/my/orders/#{sale_order.id}/pdf?#{keep_query()}" 
-                   class="btn btn-secondary" 
+                <a t-attf-href="/my/orders/#{sale_order.id}?#{keep_query()}&amp;report_type=pdf" 
+                   class="btn btn-secondary o_print_btn o_portal_invoice_print"
+                   title="Imprimir"
                    target="_blank">
                     <i class="fa fa-print"></i> Imprimir
                 </a>
@@ -46,7 +50,7 @@
 
     <!-- Agregar información del PDF adjunto en el portal -->
     <template id="portal_sale_order_pdf_info" name="Portal Sale Order PDF Info" inherit_id="sale.sale_order_portal_content" priority="21">
-        <xpath expr="//div[@id='quote']" position="before">
+        <xpath expr="//div[@id='quote_content']" position="before">
             <t t-if="sale_order.portal_has_pdf_attachment">
                 <div class="alert alert-info portal-pdf-info">
                     <div class="d-flex align-items-center">
@@ -67,9 +71,9 @@
     <!-- Reemplazar la vista previa del PDF -->
     <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
         
-        <!-- Solo si hay contenido donde mostrar el PDF -->
-        <xpath expr="//div[@id='quote']" position="replace">
-            <div id="quote" class="card-body">
+        <!-- Reemplazar el contenido principal de la cotización -->
+        <xpath expr="//div[@id='portal_sale_content']//div[@class='card-body']" position="replace">
+            <div class="card-body">
                 <t t-if="sale_order.portal_has_pdf_attachment">
                     <!-- Vista previa del PDF adjunto -->
                     <div class="portal-pdf-preview">
@@ -95,6 +99,7 @@
                         <div class="pdf-container">
                             <iframe t-att-src="sale_order.portal_pdf_attachment_url"
                                     class="portal-pdf-iframe w-100"
+                                    style="height: 600px;"
                                     frameborder="0">
                                 <p>Tu navegador no soporta la vista previa de PDF. 
                                    <a t-att-href="sale_order.portal_pdf_download_url">Haz clic aquí para descargar</a>
@@ -110,9 +115,31 @@
                         No hay documentos PDF adjuntos. Mostrando cotización estándar:
                     </div>
                     
-                    <!-- Incluir el contenido original de la cotización -->
-                    <div class="row">
-                        <div class="col-12">
+                    <!-- Información básica -->
+                    <div id="informations">
+                        <div class="row" id="so_date">
+                            <div class="mb-3 col-6">
+                                 <strong>Fecha de presupuesto:</strong>
+                              <span t-field="sale_order.date_order" t-options='{"format": "dd/MM/yyyy"}'/>
+                            </div>
+                            <div class="mb-3 col-6">
+                                <strong>Fecha de caducidad:</strong> 
+                                <span t-field="sale_order.validity_date" t-options='{"format": "dd/MM/yyyy"}'/>
+                            </div>
+                        </div>
+                        <div class="row" id="invoicing_shipping_address">
+                            <div class="col-lg-6">
+                                <strong class="d-block mb-1">Dirección de facturación y envío:</strong>
+                                <address t-field="sale_order.partner_invoice_id"
+                                        t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de productos -->
+                    <section id="details" style="page-break-inside: auto;" class="mt32">
+                        <h3>Precio</h3>
+                        <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead class="table-light">
                                     <tr>
@@ -126,7 +153,7 @@
                                 <tbody>
                                     <t t-foreach="sale_order.order_line" t-as="line">
                                         <tr>
-                                            <td><span t-field="line.product_id.display_name"/></td>
+                                            <td><span t-field="line.name"/></td>
                                             <td class="text-end">
                                                 <span t-field="line.product_uom_qty"/>
                                                 <span t-field="line.product_uom"/>
@@ -161,7 +188,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </t>
             </div>
         </xpath>
