@@ -33,7 +33,7 @@ class SalePortalQuotePDFPreview(SaleCustomerPortal):
         return self._document_check_access('sale.order', order_id, access_token=access_token)
 
     # Odoo 16: enrich the values used to render the portal order page
-    def _order_get_page_view_values(self, order, access_token, **kwargs):  # pylint: disable=arguments-differ
+    def _order_get_page_view_values(self, order, access_token=None, **kwargs):  # pylint: disable=arguments-differ
         values = super()._order_get_page_view_values(order, access_token, **kwargs)
         # Compose URLs to serve the last attached PDF (if any)
         token_qs = f"?access_token={access_token}" if access_token else ''

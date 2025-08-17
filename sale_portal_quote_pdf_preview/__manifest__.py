@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'ModuloPersonalizacionPresupuesto',
-    'summary': 'Show/print/download the last attached PDF of a Sale Order in the customer portal.',
+    'summary': 'Portal: previsualizar/descargar/imprimir el último PDF adjunto del presupuesto',
     'version': '16.0.1.0.0',
     'category': 'Sales/Portal',
     'author': 'Nahuel Dumo',
@@ -17,5 +17,5 @@
         ],
     },
     'installable': True,
-    'application': False,
+    'application': True,
 }
