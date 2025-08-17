@@ -2,13 +2,13 @@
 <odoo>
     <!-- Odoo 16: Extend the Sale portal order page to show the last attached PDF in the main content area. -->
     <template id="portal_my_order_pdf_preview" inherit_id="sale.sale_order_portal_template" name="Portal Order - PDF Preview" primary="True">
-        <!-- Target the main content area by id present in base template -->
-        <xpath expr="//div[@id='quote_content']" position="attributes">
-            <attribute name="t-if">not has_quote_pdf</attribute>
-        </xpath>
-
-        <!-- Insert PDF viewer after the main content area -->
+        <!-- Insert PDF viewer after the main content area (we compute variables inline) -->
         <xpath expr="//div[@id='quote_content']" position="after">
+            <!-- Compute flags and URLs inline to avoid relying on controller override -->
+            <t t-set="has_quote_pdf" t-value="request.env['ir.attachment'].sudo().search_count([('res_model','=', 'sale.order'), ('res_id','=', sale_order.id), '|', ('mimetype','ilike','pdf'), ('name','ilike','%.pdf')]) &gt; 0"/>
+            <t t-set="token_qs" t-value="sale_order.access_token and ('?access_token=' + sale_order.access_token) or ''"/>
+            <t t-set="quote_pdf_inline_url" t-value="'/my/orders/%s/quote/last-pdf%s' % (sale_order.id, token_qs)"/>
+            <t t-set="quote_pdf_download_url" t-value="'/my/orders/%s/quote/last-pdf/download%s' % (sale_order.id, token_qs)"/>
             <div t-if="has_quote_pdf" class="o_portal_sale_pdf_viewer my-3">
                 <div class="alert alert-info">
                     <i class="fa fa-info-circle me-2"></i>

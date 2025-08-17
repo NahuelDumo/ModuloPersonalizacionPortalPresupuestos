@@ -19,12 +19,16 @@ class SalePortalQuotePDFPreview(SaleCustomerPortal):
         """Return the last PDF ir.attachment for the given sale.order id or None.
         We sudo to ensure access to the binary content but will still enforce portal access to the order itself.
         """
+        # Accept both strict mimetype and looser matches, as some uploads have
+        # different or missing mimetypes but correct filename.
         domain = [
             ('res_model', '=', 'sale.order'),
             ('res_id', '=', order_id),
-            ('mimetype', '=', 'application/pdf'),
+            '|',
+                ('mimetype', 'ilike', 'pdf'),
+                ('name', 'ilike', '%.pdf'),
         ]
-        # Prefer chatter/uploaded attachments over computed ones; search covers both
+        # Prefer most recent attachment
         return request.env['ir.attachment'].sudo().search(domain, order='create_date desc, id desc', limit=1)
 
     def _check_portal_order_access(self, order_id, access_token=None):
