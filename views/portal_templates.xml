@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template que SOLO modifica la vista del portal del cliente -->
+    
+    <!-- Reemplazar los botones Descargar e Imprimir en el portal -->
+    <template id="portal_sale_order_pdf_buttons" name="Portal Sale Order PDF Buttons" inherit_id="sale.sale_order_portal_content" priority="20">
+        
+        <!-- Reemplazar el botón de Descargar -->
+        <xpath expr="//a[contains(@class,'btn-secondary') and contains(@href,'/my/orders/') and contains(@href,'/pdf')]" position="replace">
+            <t t-if="sale_order.portal_has_pdf_attachment">
+                <a t-att-href="sale_order.portal_pdf_download_url" 
+                   class="btn btn-secondary" 
+                   target="_self">
+                    <i class="fa fa-download"></i> Descargar
+                </a>
+            </t>
+            <t t-else="">
+                <!-- Fallback al PDF original si no hay adjunto -->
+                <a t-attf-href="/my/orders/#{sale_order.id}/pdf?#{keep_query()}" 
+                   class="btn btn-secondary" 
+                   target="_self">
+                    <i class="fa fa-download"></i> Descargar
+                </a>
+            </t>
+        </xpath>
+
+        <!-- Reemplazar el botón de Imprimir -->
+        <xpath expr="//a[contains(@class,'btn-secondary') and @target='_blank' and contains(@href,'/my/orders/') and contains(@href,'/pdf')]" position="replace">
+            <t t-if="sale_order.portal_has_pdf_attachment">
+                <a t-att-href="sale_order.portal_pdf_attachment_url" 
+                   class="btn btn-secondary" 
+                   target="_blank">
+                    <i class="fa fa-print"></i> Imprimir
+                </a>
+            </t>
+            <t t-else="">
+                <!-- Fallback al PDF original si no hay adjunto -->
+                <a t-attf-href="/my/orders/#{sale_order.id}/pdf?#{keep_query()}" 
+                   class="btn btn-secondary" 
+                   target="_blank">
+                    <i class="fa fa-print"></i> Imprimir
+                </a>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Agregar información del PDF adjunto en el portal -->
+    <template id="portal_sale_order_pdf_info" name="Portal Sale Order PDF Info" inherit_id="sale.sale_order_portal_content" priority="21">
+        <xpath expr="//div[@id='quote']" position="before">
+            <t t-if="sale_order.portal_has_pdf_attachment">
+                <div class="alert alert-info portal-pdf-info">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-file-pdf-o fa-2x text-danger me-3"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">📄 Documento PDF Disponible</h6>
+                            <small>
+                                <strong t-esc="sale_order.portal_pdf_attachment_name"/>
+                                - Este documento reemplaza la cotización estándar
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Reemplazar la vista previa del PDF -->
+    <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
+        
+        <!-- Solo si hay contenido donde mostrar el PDF -->
+        <xpath expr="//div[@id='quote']" position="replace">
+            <div id="quote" class="card-body">
+                <t t-if="sale_order.portal_has_pdf_attachment">
+                    <!-- Vista previa del PDF adjunto -->
+                    <div class="portal-pdf-preview">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">
+                                <i class="fa fa-file-pdf-o text-danger"></i>
+                                Vista Previa del Documento
+                            </h5>
+                            <div class="btn-group">
+                                <a t-att-href="sale_order.portal_pdf_attachment_url" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   target="_blank">
+                                    <i class="fa fa-external-link"></i> Abrir en nueva ventana
+                                </a>
+                                <a t-att-href="sale_order.portal_pdf_download_url" 
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="fa fa-download"></i> Descargar
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Iframe para mostrar el PDF -->
+                        <div class="pdf-container">
+                            <iframe t-att-src="sale_order.portal_pdf_attachment_url"
+                                    class="portal-pdf-iframe w-100"
+                                    frameborder="0">
+                                <p>Tu navegador no soporta la vista previa de PDF. 
+                                   <a t-att-href="sale_order.portal_pdf_download_url">Haz clic aquí para descargar</a>
+                                </p>
+                            </iframe>
+                        </div>
+                    </div>
+                </t>
+                <t t-else="">
+                    <!-- Fallback: mostrar la cotización normal si no hay PDF adjunto -->
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        No hay documentos PDF adjuntos. Mostrando cotización estándar:
+                    </div>
+                    
+                    <!-- Incluir el contenido original de la cotización -->
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th class="text-end">Precio Unitario</th>
+                                        <th class="text-end">Impuestos</th>
+                                        <th class="text-end">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="sale_order.order_line" t-as="line">
+                                        <tr>
+                                            <td><span t-field="line.product_id.display_name"/></td>
+                                            <td class="text-end">
+                                                <span t-field="line.product_uom_qty"/>
+                                                <span t-field="line.product_uom"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <span t-field="line.price_unit" 
+                                                      t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
+                                            </td>
+                                            <td class="text-end">
+                                                <span t-esc="', '.join(map(lambda x: x.name, line.tax_id))"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <span t-field="line.price_subtotal" 
+                                                      t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            
+                            <div class="row">
+                                <div class="col-6 offset-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Total:</strong></td>
+                                            <td class="text-end">
+                                                <strong t-field="sale_order.amount_total" 
+                                                        t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
+                                            </strong>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

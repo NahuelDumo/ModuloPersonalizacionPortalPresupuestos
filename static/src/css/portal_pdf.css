@@ -1,0 +1,152 @@
+/* Estilos SOLO para el portal del cliente */
+
+.portal-pdf-info {
+    border-left: 4px solid #dc3545;
+    background-color: #f8f9fa;
+    border-color: #bee5eb;
+}
+
+.portal-pdf-info h6 {
+    color: #155724;
+    margin-bottom: 5px;
+}
+
+.portal-pdf-info small {
+    color: #6c757d;
+}
+
+.portal-pdf-preview {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.pdf-container {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.portal-pdf-iframe {
+    height: 600px;
+    min-height: 500px;
+    width: 100%;
+    border: none;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .portal-pdf-iframe {
+        height: 400px;
+        min-height: 300px;
+    }
+    
+    .portal-pdf-info {
+        text-align: center;
+    }
+    
+    .portal-pdf-info .d-flex {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .portal-pdf-info .fa-2x {
+        margin-bottom: 10px;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 5px;
+    }
+}
+
+/* Mejorar el aspecto de los botones de acción */
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.btn-outline-success:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+/* Loading state para el iframe */
+.pdf-container::before {
+    content: "Cargando PDF...";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.pdf-container iframe {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mejorar la tabla fallback */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-light th {
+    background-color: #f8f9fa !important;
+}
+
+/* Alertas personalizadas */
+.alert-warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+.alert-warning .fa-exclamation-triangle {
+    color: #ffc107;
+    margin-right: 8px;
+}
+
+/* Animaciones suaves */
+.portal-pdf-preview {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mejorar los iconos */
+.fa-file-pdf-o {
+    color: #dc3545 !important;
+}
+
+.fa-external-link,
+.fa-download {
+    margin-right: 5px;
+}
+
+/* Estilos para pantallas grandes */
+@media (min-width: 1200px) {
+    .portal-pdf-iframe {
+        height: 800px;
+    }
+}
