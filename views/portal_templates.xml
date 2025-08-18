@@ -78,51 +78,6 @@
                     display: none !important;
                 }
             </style>
-            
-            <!-- JavaScript para ocultar dinámicamente la barra del PDF -->
-            <script t-if="sale_order.portal_has_pdf_attachment">
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Función para ocultar la barra superior del PDF
-                    function hidePdfToolbar() {
-                        var iframe = document.querySelector('.portal-pdf-iframe');
-                        if (iframe) {
-                            // Agregar parámetros adicionales si no están
-                            var src = iframe.src;
-                            if (src && !src.includes('#toolbar=0')) {
-                                iframe.src = src + '#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=0';
-                            }
-                            
-                            // Aplicar estilos adicionales
-                            iframe.style.marginTop = '-50px';
-                            iframe.style.height = '850px';
-                        }
-                        
-                        // Crear overlay si no existe
-                        var container = document.querySelector('.pdf-container');
-                        if (container && !container.querySelector('.pdf-overlay')) {
-                            var overlay = document.createElement('div');
-                            overlay.className = 'pdf-overlay';
-                            overlay.style.cssText = `
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                height: 50px;
-                                background: white;
-                                z-index: 1000;
-                                pointer-events: none;
-                                border-bottom: 1px solid #dee2e6;
-                            `;
-                            container.appendChild(overlay);
-                        }
-                    }
-                    
-                    // Ejecutar inmediatamente y después de que cargue el iframe
-                    hidePdfToolbar();
-                    setTimeout(hidePdfToolbar, 1000);
-                    setTimeout(hidePdfToolbar, 3000);
-                });
-            </script>
         </xpath>
     </template>
 
@@ -208,37 +163,19 @@
                     overflow: hidden;
                 }
                 
-                /* Overlay para ocultar la barra superior del PDF */
-                .pdf-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 40px;
-                    background: white;
-                    z-index: 10;
-                    pointer-events: none;
-                }
-                
                 /* Ocultar la barra de herramientas del PDF */
                 .portal-pdf-iframe {
                     border: none !important;
-                    position: relative;
                 }
                 
-                /* CSS adicional para ocultar toolbars de PDF viewers */
+                /* Ocultar cualquier toolbar que pueda aparecer */
                 iframe[src*=".pdf"] {
                     -webkit-appearance: none;
                 }
                 
-                /* Ocultar scrollbars del iframe */
-                .pdf-container iframe::-webkit-scrollbar {
-                    display: none;
-                }
-                
-                .pdf-container {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
+                /* CSS adicional para ocultar toolbars de PDF viewers */
+                .pdf-container iframe {
+                    pointer-events: auto;
                 }
                 
                 @media print {
