@@ -26,6 +26,7 @@
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 .portal-pdf-iframe {
@@ -77,7 +78,7 @@
     color: white;
 }
 
-/* Loading state para el iframe */
+/* Loading state para el iframe - CORREGIDO */
 .pdf-container::before {
     content: "Cargando PDF...";
     display: flex;
@@ -87,14 +88,22 @@
     background: #f8f9fa;
     color: #6c757d;
     font-style: italic;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 0;
 }
-/* Ocultar el ::before cuando el iframe está presente y cargado */
-.pdf-container:has(iframe.portal-pdf-iframe[src]:not([src=""])) ::before {
+
+/* Ocultar el loading cuando el iframe está presente y cargado */
+.pdf-container.loaded::before {
     display: none;
 }
+
 .pdf-container iframe {
     position: relative;
     z-index: 1;
+    background: white;
 }
 
 /* Mejorar la tabla fallback */
