@@ -78,6 +78,51 @@
                     display: none !important;
                 }
             </style>
+            
+            <!-- JavaScript para ocultar dinámicamente la barra del PDF -->
+            <script t-if="sale_order.portal_has_pdf_attachment">
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Función para ocultar la barra superior del PDF
+                    function hidePdfToolbar() {
+                        var iframe = document.querySelector('.portal-pdf-iframe');
+                        if (iframe) {
+                            // Agregar parámetros adicionales si no están
+                            var src = iframe.src;
+                            if (src && !src.includes('#toolbar=0')) {
+                                iframe.src = src + '#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=0';
+                            }
+                            
+                            // Aplicar estilos adicionales
+                            iframe.style.marginTop = '-50px';
+                            iframe.style.height = '850px';
+                        }
+                        
+                        // Crear overlay si no existe
+                        var container = document.querySelector('.pdf-container');
+                        if (container && !container.querySelector('.pdf-overlay')) {
+                            var overlay = document.createElement('div');
+                            overlay.className = 'pdf-overlay';
+                            overlay.style.cssText = `
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                height: 50px;
+                                background: white;
+                                z-index: 1000;
+                                pointer-events: none;
+                                border-bottom: 1px solid #dee2e6;
+                            `;
+                            container.appendChild(overlay);
+                        }
+                    }
+                    
+                    // Ejecutar inmediatamente y después de que cargue el iframe
+                    hidePdfToolbar();
+                    setTimeout(hidePdfToolbar, 1000);
+                    setTimeout(hidePdfToolbar, 3000);
+                });
+            </script>
         </xpath>
     </template>
 
@@ -109,11 +154,17 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="pdf-container">
-                                <!-- iframe limpio sin toolbar -->
-                                <iframe t-att-src="sale_order.portal_pdf_attachment_url + '#toolbar=0&amp;navpanes=0&amp;scrollbar=0'"
+                                <!-- iframe con múltiples parámetros para ocultar toolbar -->
+                                <iframe t-att-src="sale_order.portal_pdf_attachment_url + '#toolbar=0&amp;navpanes=0&amp;scrollbar=0&amp;view=FitH&amp;pagemode=none'"
                                         class="portal-pdf-iframe w-100"
-                                        style="height: 800px; border: none;"
-                                        frameborder="0"></iframe>
+                                        style="height: 800px; border: none; margin-top: -40px;"
+                                        frameborder="0" 
+                                        scrolling="no">
+                                </iframe>
+                                
+                                <!-- Overlay para ocultar la parte superior -->
+                                <div class="pdf-overlay"></div>
+                                
                                 <!-- fallback -->
                                 <noscript>
                                     <div class="p-4 text-center">
@@ -155,6 +206,45 @@
                 .pdf-container {
                     position: relative;
                     overflow: hidden;
+                }
+                
+                /* Overlay para ocultar la barra superior del PDF */
+                .pdf-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 40px;
+                    background: white;
+                    z-index: 10;
+                    pointer-events: none;
+                }
+                
+                /* Ocultar la barra de herramientas del PDF */
+                .portal-pdf-iframe {
+                    border: none !important;
+                    position: relative;
+                }
+                
+                /* CSS adicional para ocultar toolbars de PDF viewers */
+                iframe[src*=".pdf"] {
+                    -webkit-appearance: none;
+                }
+                
+                /* Ocultar scrollbars del iframe */
+                .pdf-container iframe::-webkit-scrollbar {
+                    display: none;
+                }
+                
+                .pdf-container {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                
+                @media print {
+                    .portal-pdf-iframe {
+                        display: none;
+                    }
                 }
             </style>
         </xpath>
