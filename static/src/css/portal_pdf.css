@@ -88,7 +88,10 @@
     color: #6c757d;
     font-style: italic;
 }
-
+/* Ocultar el ::before cuando el iframe está presente y cargado */
+.pdf-container:has(iframe.portal-pdf-iframe[src]:not([src=""])) ::before {
+    display: none;
+}
 .pdf-container iframe {
     position: relative;
     z-index: 1;
