@@ -109,8 +109,8 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="pdf-container">
-                                <!-- iframe limpio -->
-                                <iframe t-att-src="sale_order.portal_pdf_attachment_url"
+                                <!-- iframe limpio sin toolbar -->
+                                <iframe t-att-src="sale_order.portal_pdf_attachment_url + '#toolbar=0&amp;navpanes=0&amp;scrollbar=0'"
                                         class="portal-pdf-iframe w-100"
                                         style="height: 800px; border: none;"
                                         frameborder="0"></iframe>
