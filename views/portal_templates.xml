@@ -61,6 +61,14 @@
         </xpath>
     </template>
 
+    <!-- Ocultar botones de descargar e imprimir del sidebar cuando hay PDF adjunto -->
+    <template id="portal_sale_order_hide_sidebar_buttons" name="Hide Sidebar Buttons When PDF" inherit_id="sale.sale_order_portal_content" priority="19">
+        <!-- Ocultar los botones de descargar e imprimir del sidebar -->
+        <xpath expr="//div[@class='o_download_pdf btn-toolbar flex-sm-nowrap']" position="attributes">
+            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+    </template>
+
     <!-- Agregar vista previa del PDF después del contenido de la cotización -->
     <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
         <!-- Usar el div principal como punto de anclaje para el PDF preview -->
