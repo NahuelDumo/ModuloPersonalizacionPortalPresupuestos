@@ -61,16 +61,23 @@
         </xpath>
     </template>
 
-    <!-- Ocultar botones Descargar/Imprimir usando las clases específicas encontradas -->
+    <!-- Ocultar botones usando CSS cuando hay PDF adjunto -->
     <template id="portal_sale_order_hide_buttons" inherit_id="sale.sale_order_portal_content" priority="21">
-        <!-- Ocultar botón Download usando clase o_download_btn -->
-        <xpath expr="//a[contains(@class,'o_download_btn')]" position="attributes">
-            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
-        </xpath>
-        
-        <!-- Ocultar botón Print usando clase o_print_btn -->
-        <xpath expr="//a[contains(@class,'o_print_btn')]" position="attributes">
-            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
+        <!-- Agregar CSS para ocultar botones específicos -->
+        <xpath expr="//div[@id='introduction']" position="before">
+            <style t-if="sale_order.portal_has_pdf_attachment">
+                /* Ocultar botones de descarga e impresión cuando hay PDF adjunto */
+                .o_download_btn, .o_print_btn,
+                a[class*="download"], a[class*="print"],
+                .btn-secondary:has(.fa-download), .btn-secondary:has(.fa-print) {
+                    display: none !important;
+                }
+                
+                /* Selector más específico por contenido de texto */
+                a.btn[href*="report_type=pdf"] {
+                    display: none !important;
+                }
+            </style>
         </xpath>
     </template>
 
