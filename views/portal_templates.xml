@@ -61,6 +61,18 @@
         </xpath>
     </template>
 
+    <!-- Ocultar botones Descargar/Imprimir de la izquierda cuando hay PDF -->
+    <template id="portal_sale_order_hide_buttons" inherit_id="sale.sale_order_portal_content" priority="21">
+        <!-- Botón Descargar -->
+        <xpath expr="//a[contains(@class,'btn') and contains(@href,'report/pdf')]" position="attributes">
+            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+        <!-- Botón Imprimir -->
+        <xpath expr="//a[contains(@class,'btn') and contains(@href,'print')]" position="attributes">
+            <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
+        </xpath>
+    </template>
+
     <!-- Agregar vista previa del PDF después del contenido de la cotización -->
     <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
         <!-- Usar el div principal como punto de anclaje para el PDF preview -->
@@ -89,10 +101,13 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="pdf-container">
+                                <!-- iframe limpio -->
                                 <iframe t-att-src="sale_order.portal_pdf_attachment_url"
                                         class="portal-pdf-iframe w-100"
                                         style="height: 800px; border: none;"
-                                        frameborder="0">
+                                        frameborder="0"></iframe>
+                                <!-- fallback -->
+                                <noscript>
                                     <div class="p-4 text-center">
                                         <p class="mb-3">Tu navegador no soporta la vista previa de PDF.</p>
                                         <a t-att-href="sale_order.portal_pdf_download_url" 
@@ -100,7 +115,7 @@
                                             <i class="fa fa-download"></i> Descargar PDF
                                         </a>
                                     </div>
-                                </iframe>
+                                </noscript>
                             </div>
                         </div>
                     </div>
