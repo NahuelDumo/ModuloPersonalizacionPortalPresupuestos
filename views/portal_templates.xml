@@ -61,7 +61,6 @@
         </xpath>
     </template>
 
-
     <!-- Agregar vista previa del PDF después del contenido de la cotización -->
     <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
         <!-- Usar el div principal como punto de anclaje para el PDF preview -->
@@ -135,62 +134,6 @@
                     overflow: hidden;
                 }
             </style>
-        </xpath>
-    </template>
-
-    <!-- JS/CSS para ocultar Descargar/Imprimir y el texto "Cargando PDF…" cuando hay adjunto -->
-    <template id="portal_sale_order_hide_buttons_js" name="Hide Download/Print When PDF" inherit_id="sale.sale_order_portal_content" priority="24">
-        <xpath expr="//div[@id='introduction']" position="before">
-            <t t-if="sale_order.portal_has_pdf_attachment">
-                <style>
-                    /* Ocultar acciones estándar del portal */
-                    .o_portal_print, .o_portal_download { display: none !important; }
-                    /* Posibles enlaces a reportes estándar */
-                    a[href*="/report/pdf"], a[href*="/report/print"] { display: none !important; }
-                </style>
-                <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    try {
-                        var selectors = [
-                            '.o_portal_print',
-                            '.o_portal_download',
-                            'a[href*="/report/pdf"]',
-                            'a[href*="/report/print"]',
-                            'button.o_portal_print',
-                            'button.o_portal_download'
-                        ];
-                        selectors.forEach(function (sel) {
-                            document.querySelectorAll(sel).forEach(function (el) {
-                                el.style.display = 'none';
-                            });
-                        });
-
-                        // Ocultar loaders comunes del visor PDF
-                        var loaderClasses = [
-                            'o_portal_pdf_viewer_loader',
-                            'o_portal_iframe_loader',
-                            'o_pdfjs_loading',
-                            'o_portal_pdf_loader'
-                        ];
-                        loaderClasses.forEach(function (cls) {
-                            document.querySelectorAll('.' + cls).forEach(function (el) {
-                                el.style.display = 'none';
-                            });
-                        });
-
-                        // Fallback por texto
-                        document.querySelectorAll('body *').forEach(function (el) {
-                            var t = (el.textContent || '').trim();
-                            if (t === 'Cargando PDF...' || t === 'Cargando PDF…' || t === 'Cargando PDF ...') {
-                                el.style.display = 'none';
-                            }
-                        });
-                    } catch (e) {
-                        if (window.console && console.debug) console.debug('portal pdf hide js:', e);
-                    }
-                });
-                </script>
-            </t>
         </xpath>
     </template>
 
