@@ -61,19 +61,18 @@
         </xpath>
     </template>
 
-    <!-- Ocultar botones Descargar/Imprimir de la izquierda cuando hay PDF -->
+    <!-- Ocultar botones Descargar/Imprimir usando las clases específicas encontradas -->
     <template id="portal_sale_order_hide_buttons" inherit_id="sale.sale_order_portal_content" priority="21">
-        <!-- Botón Descargar (Download) -->
-        <xpath expr="//a[@title='Download']" position="attributes">
+        <!-- Ocultar botón Download usando clase o_download_btn -->
+        <xpath expr="//a[contains(@class,'o_download_btn')]" position="attributes">
             <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
         </xpath>
-        <!-- Botón Imprimir (Print) -->
-        <xpath expr="//a[@title='Print']" position="attributes">
+        
+        <!-- Ocultar botón Print usando clase o_print_btn -->
+        <xpath expr="//a[contains(@class,'o_print_btn')]" position="attributes">
             <attribute name="t-if">not sale_order.portal_has_pdf_attachment</attribute>
         </xpath>
     </template>
-
-
 
     <!-- Agregar vista previa del PDF después del contenido de la cotización -->
     <template id="portal_sale_order_pdf_preview" name="Portal Sale Order PDF Preview" inherit_id="sale.sale_order_portal_content" priority="22">
